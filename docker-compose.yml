@@ -1,0 +1,50 @@
+services:
+  api:
+    build: .
+    command: node dist/server.js
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/media_pipeline
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      UPLOAD_DIR: uploads
+    volumes:
+      - uploads:/app/uploads
+    depends_on:
+      - mongo
+      - redis
+
+  worker:
+    build: .
+    command: node dist/workers/mediaWorker.js
+    env_file:
+      - .env
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/media_pipeline
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      UPLOAD_DIR: uploads
+    volumes:
+      - uploads:/app/uploads
+    depends_on:
+      - mongo
+      - redis
+
+  mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+volumes:
+  mongo-data:
+  uploads:
